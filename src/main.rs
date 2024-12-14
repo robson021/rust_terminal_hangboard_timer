@@ -1,6 +1,6 @@
 mod audio;
 
-use crate::audio::{play_bell, play_ding};
+use crate::audio::{play_bell, play_ding, play_finish};
 use std::thread;
 
 #[inline(always)]
@@ -82,7 +82,6 @@ fn main() {
 
     let start_in = 5;
     println!("Get ready, start in {}s.", start_in);
-    play_ding();
     sleep(5);
 
     for set in 1..number_of_sets + 1 {
@@ -93,5 +92,7 @@ fn main() {
             rest_between_sets(rest_time_between_sets);
         }
     }
+    play_finish();
     println!("Workout done!");
+    sleep(2)
 }
