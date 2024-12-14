@@ -1,6 +1,32 @@
+mod audio;
+
+use crate::audio::{Audio, PlayableAudio};
+use std::thread;
+
 #[inline(always)]
 fn print_separator() {
     println!("-------------------------------------")
+}
+
+#[inline(always)]
+fn countdown_hang(time: u32) {
+    println!("Hang for {}s", time);
+    for n in (1..time + 1).rev() {
+        println!("{}...", n);
+        sleep(1);
+    }
+    println!("Stop hanging!");
+}
+
+#[inline(always)]
+fn countdown_rest(time: u32) {
+    println!("Rest for: {}s", time);
+    sleep(time);
+}
+
+#[inline(always)]
+fn sleep(seconds: u32) {
+    thread::sleep(std::time::Duration::from_secs(seconds as u64))
 }
 
 fn read_input() -> u32 {
@@ -15,16 +41,25 @@ fn read_input() -> u32 {
 }
 
 fn hang(hang_time: u32, rest_time: u32, number_of_hang_repeats: u32) {
-    println!("Hang!");
-    // todo!()
+    for _ in 0..number_of_hang_repeats - 1 {
+        countdown_hang(hang_time);
+        countdown_rest(rest_time);
+    }
+    countdown_hang(hang_time);
 }
 
 fn rest_between_sets(rest_time: u32) {
     println!("Rest time before next set: {}s", rest_time);
-    // todo!()
+    sleep(rest_time);
 }
 
 fn main() {
+    let bell_audio: Audio = audio::get_audio(audio::BELL_SOUND);
+    let ding_audio: Audio = audio::get_audio(audio::DING_SOUND);
+
+    // bell_audio.play_sound();
+    // ding_audio.play_sound();
+
     println!("Enter hang time (seconds):");
     let hang_time = read_input();
 
@@ -42,12 +77,16 @@ fn main() {
 
     print_separator();
     println!("Workout setup:");
-    println!("Hang: {:#?}", hang_time);
-    println!("Rest: {:#?}", rest_time);
-    println!("Number of hang repeats: {:#?}", number_of_hang_repeats);
-    println!("Rest between sets: {:#?}", rest_time_between_sets);
-    println!("Number of  sets: {:#?}", number_of_sets);
+    println!("Hang: {}", hang_time);
+    println!("Rest: {}", rest_time);
+    println!("Number of hang repeats: {}", number_of_hang_repeats);
+    println!("Rest between sets: {}", rest_time_between_sets);
+    println!("Number of  sets: {}", number_of_sets);
     print_separator();
+
+    let start_in = 5;
+    println!("Get ready, start in {}s.", start_in);
+    sleep(5);
 
     for set in 1..number_of_sets + 1 {
         println!("Set: {} of {}", set, number_of_sets);
@@ -57,4 +96,5 @@ fn main() {
             rest_between_sets(rest_time_between_sets);
         }
     }
+    println!("Workout done!");
 }
