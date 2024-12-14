@@ -1,6 +1,6 @@
 mod audio;
 
-use crate::audio::{Audio, PlayableAudio};
+use crate::audio::{play_bell, play_ding};
 use std::thread;
 
 #[inline(always)]
@@ -11,11 +11,13 @@ fn print_separator() {
 #[inline(always)]
 fn countdown_hang(time: u32) {
     println!("Hang for {}s", time);
+    play_ding();
     for n in (1..time + 1).rev() {
         println!("{}...", n);
         sleep(1);
     }
     println!("Stop hanging!");
+    play_bell();
 }
 
 #[inline(always)]
@@ -54,12 +56,6 @@ fn rest_between_sets(rest_time: u32) {
 }
 
 fn main() {
-    let bell_audio: Audio = audio::get_audio(audio::BELL_SOUND);
-    let ding_audio: Audio = audio::get_audio(audio::DING_SOUND);
-
-    // bell_audio.play_sound();
-    // ding_audio.play_sound();
-
     println!("Enter hang time (seconds):");
     let hang_time = read_input();
 
@@ -86,6 +82,7 @@ fn main() {
 
     let start_in = 5;
     println!("Get ready, start in {}s.", start_in);
+    play_ding();
     sleep(5);
 
     for set in 1..number_of_sets + 1 {
