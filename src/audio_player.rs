@@ -16,14 +16,21 @@ pub fn ding() {
 }
 
 #[inline(always)]
+pub fn end_of_round() {
+    play_sound(AudioNotification::RoundDone);
+}
+
+#[inline(always)]
 pub fn finish() {
     play_sound(AudioNotification::Finish);
 }
 
 #[inline(always)]
 fn get_audio_samples(filename: &str) -> Decoder<BufReader<File>> {
-    let file = BufReader::new(File::open(filename).expect("File not found"));
-    Decoder::new(file).unwrap_or_else(|_| panic!("Failed to decode the file {}", filename))
+    let file =
+        File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {}", filename));
+    let buf_reader = BufReader::new(file);
+    Decoder::new(buf_reader).unwrap_or_else(|_| panic!("Failed to decode the file {}", filename))
 }
 
 // todo: cache the file, instead of loading every time & run in a common thread pool

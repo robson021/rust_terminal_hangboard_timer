@@ -42,10 +42,10 @@ impl WorkoutPlan {
         let number_of_sets = self.number_of_sets;
         for set in 1..number_of_sets + 1 {
             println!("Set: {} of {}", set, number_of_sets);
-            hang(self.hang_time, self.rest_time, self.number_of_hang_repeats);
+            hang_round(self.hang_time, self.rest_time, self.number_of_hang_repeats);
             let is_last_set = set == number_of_sets;
             if !is_last_set {
-                rest_between_sets(self.rest_time_between_sets);
+                countdown_rest_between_sets(self.rest_time_between_sets);
             }
         }
         audio_player::finish();
@@ -66,13 +66,11 @@ impl Display for WorkoutPlan {
 #[inline(always)]
 fn countdown_hang(time: u32) {
     println!("Hang for {}s", time);
-    audio_player::ding();
     for n in (1..time + 1).rev() {
         println!("{}...", n);
         sleep(1);
     }
     println!("Stop hanging!");
-    audio_player::bell();
 }
 
 #[inline(always)]
@@ -81,15 +79,22 @@ fn countdown_rest(time: u32) {
     sleep(time);
 }
 
-fn hang(hang_time: u32, rest_time: u32, number_of_hang_repeats: u32) {
+fn hang_round(hang_time: u32, rest_time: u32, number_of_hang_repeats: u32) {
+    if hang_time < 1 {
+        return;
+    }
     for _ in 0..number_of_hang_repeats - 1 {
+        audio_player::ding();
         countdown_hang(hang_time);
+        audio_player::bell();
         countdown_rest(rest_time);
     }
+    audio_player::ding();
     countdown_hang(hang_time);
+    audio_player::end_of_round();
 }
 
-fn rest_between_sets(rest_time: u32) {
+fn countdown_rest_between_sets(rest_time: u32) {
     println!("Rest time before next set: {}s", rest_time);
     sleep(rest_time);
 }
