@@ -11,7 +11,7 @@ fn print_separator() {
 }
 
 #[inline(always)]
-fn sleep(seconds: u32) {
+fn sleep_seconds(seconds: u32) {
     thread::sleep(std::time::Duration::from_secs(seconds as u64))
 }
 

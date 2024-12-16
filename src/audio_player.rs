@@ -1,4 +1,4 @@
-use crate::{sleep, sound};
+use crate::{sleep_seconds, sound};
 use rodio::{source::Source, Decoder, OutputStream};
 use sound::AudioNotification;
 use std::fs::File;
@@ -26,23 +26,24 @@ pub fn finish() {
 }
 
 #[inline(always)]
-fn get_audio_samples(filename: &str) -> Decoder<BufReader<File>> {
-    let file =
-        File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {}", filename));
-    let buf_reader = BufReader::new(file);
-    Decoder::new(buf_reader).unwrap_or_else(|_| panic!("Failed to decode the file {}", filename))
+fn open_file(filename: &str) -> File {
+    File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {}", filename))
 }
 
-// todo: cache the file, instead of loading every time & run in a common thread pool
+// todo: run in a common thread pool - one sound can be played at a time
 fn play_sound(sound: AudioNotification) {
-    let filename = sound.as_str();
-    let source = get_audio_samples(filename);
-    thread::spawn(|| {
+    let file_path = sound.to_file_path();
+    thread::spawn(move || {
+        // let file = AUDIO_CACHE.get(&sound).expect("Failed to find audio file in cache");
+        let file = open_file(file_path);
+        let buf_reader = BufReader::new(file);
+        let decoder = Decoder::new(buf_reader)
+            .unwrap_or_else(|_| panic!("Failed to decode the sound {:?}", sound));
         let (_stream, stream_handle) =
             OutputStream::try_default().expect("Failed to open audio output stream");
         stream_handle
-            .play_raw(source.convert_samples())
+            .play_raw(decoder.convert_samples())
             .expect("Failed to play the sound");
-        sleep(2);
+        sleep_seconds(2);
     });
 }

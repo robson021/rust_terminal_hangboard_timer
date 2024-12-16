@@ -1,3 +1,4 @@
+#[derive(Eq, PartialEq, Hash, Debug)]
 pub enum AudioNotification {
     Bell,
     Ding,
@@ -5,12 +6,12 @@ pub enum AudioNotification {
     RoundDone,
 }
 impl AudioNotification {
-    pub fn as_str(&self) -> &'static str {
+    pub fn to_file_path(&self) -> &'static str {
         match self {
-            AudioNotification::Bell => "assets/sounds/bell.wav",
-            AudioNotification::Ding => "assets/sounds/ding.wav",
-            AudioNotification::Finish => "assets/sounds/finish.wav",
-            AudioNotification::RoundDone => "assets/sounds/round_done.wav",
+            AudioNotification::Bell => "assets/sound/bell.wav",
+            AudioNotification::Ding => "assets/sound/ding.wav",
+            AudioNotification::Finish => "assets/sound/finish.wav",
+            AudioNotification::RoundDone => "assets/sound/round_done.wav",
         }
     }
 }
