@@ -1,9 +1,9 @@
 use crate::{sleep_seconds, sound};
+use lazy_static::lazy_static;
 use rodio::{source::Source, Decoder, OutputStream};
 use sound::AudioNotification;
 use std::fs::File;
 use std::io::BufReader;
-use std::thread;
 
 #[inline(always)]
 pub fn bell() {
@@ -30,11 +30,13 @@ fn open_file(filename: &str) -> File {
     File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {}", filename))
 }
 
-// todo: run in a common thread pool - one sound can be played at a time
+lazy_static! {
+    static ref AUDIO_THREAD_POOL: threadpool::ThreadPool = threadpool::ThreadPool::new(1);
+}
+
 fn play_sound(sound: AudioNotification) {
     let file_path = sound.to_file_path();
-    thread::spawn(move || {
-        // let file = AUDIO_CACHE.get(&sound).expect("Failed to find audio file in cache");
+    AUDIO_THREAD_POOL.execute(move || {
         let file = open_file(file_path);
         let buf_reader = BufReader::new(file);
         let decoder = Decoder::new(buf_reader)
