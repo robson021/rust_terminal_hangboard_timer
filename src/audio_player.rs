@@ -26,6 +26,11 @@ pub fn finish() {
 }
 
 #[inline(always)]
+pub fn get_ready() {
+    play_sound(AudioNotification::GetReady);
+}
+
+#[inline(always)]
 fn open_file(filename: &str) -> File {
     File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {}", filename))
 }

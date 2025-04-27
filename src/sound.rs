@@ -4,6 +4,7 @@ pub enum AudioNotification {
     Ding,
     Finish,
     RoundDone,
+    GetReady,
 }
 impl AudioNotification {
     pub fn to_file_path(&self) -> &'static str {
@@ -12,6 +13,7 @@ impl AudioNotification {
             AudioNotification::Ding => "assets/sound/ding.wav",
             AudioNotification::Finish => "assets/sound/finish.wav",
             AudioNotification::RoundDone => "assets/sound/round_done.wav",
+            AudioNotification::GetReady => "assets/sound/get_ready.wav",
         }
     }
 }

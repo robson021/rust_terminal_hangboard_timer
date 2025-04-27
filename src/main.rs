@@ -18,7 +18,7 @@ fn sleep_seconds(seconds: u32) {
             let interval = 10;
             let seconds = seconds - interval;
             thread::sleep(Duration::from_secs(seconds as u64));
-            // audio_player::bell();
+            audio_player::get_ready();
             println!("Prepare. The next series starts in {}s", interval);
             thread::sleep(Duration::from_secs(interval as u64));
         }
