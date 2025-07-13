@@ -19,7 +19,7 @@ fn sleep_seconds(seconds: u32) {
             let seconds = seconds - interval;
             thread::sleep(Duration::from_secs(seconds as u64));
             audio_player::get_ready();
-            println!("Prepare. The next series starts in {}s", interval);
+            println!("Prepare. The next series starts in {interval}s");
             thread::sleep(Duration::from_secs(interval as u64));
         }
         false => thread::sleep(Duration::from_secs(seconds as u64)),
@@ -31,7 +31,7 @@ fn main() {
 
     print_separator();
     println!("Workout plan:");
-    println!("{}", workout_plan);
+    println!("{workout_plan}");
     print_separator();
 
     workout_plan.start_session();

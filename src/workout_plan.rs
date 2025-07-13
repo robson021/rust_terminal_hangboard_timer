@@ -36,12 +36,12 @@ impl WorkoutPlan {
     }
     pub fn start_session(&self) {
         let start_in = 5;
-        println!("Get ready, start in {}s.", start_in);
+        println!("Get ready, start in {start_in}s.");
         sleep_seconds(5);
 
         let number_of_sets = self.number_of_sets;
         for set in 1..number_of_sets + 1 {
-            println!("Set: {} of {}", set, number_of_sets);
+            println!("Set: {set} of {number_of_sets}");
             hang_round(self.hang_time, self.rest_time, self.number_of_hang_repeats);
             let is_last_set = set == number_of_sets;
             if !is_last_set {
@@ -65,9 +65,9 @@ impl Display for WorkoutPlan {
 
 #[inline(always)]
 fn countdown_hang(time: u32) {
-    println!("Hang for {}s", time);
+    println!("Hang for {time}s");
     for n in (1..time + 1).rev() {
-        println!("{}...", n);
+        println!("{n}...");
         sleep_seconds(1);
     }
     println!("Stop hanging!");
@@ -75,7 +75,7 @@ fn countdown_hang(time: u32) {
 
 #[inline(always)]
 fn countdown_rest(time: u32) {
-    println!("Rest for: {}s", time);
+    println!("Rest for: {time}s");
     sleep_seconds(time);
 }
 
@@ -95,7 +95,7 @@ fn hang_round(hang_time: u32, rest_time: u32, number_of_hang_repeats: u32) {
 }
 
 fn countdown_rest_between_sets(rest_time: u32) {
-    println!("Rest time before next set: {}s", rest_time);
+    println!("Rest time before next set: {rest_time}s");
     sleep_seconds(rest_time);
 }
 

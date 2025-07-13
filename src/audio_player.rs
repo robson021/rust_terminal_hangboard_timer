@@ -32,7 +32,7 @@ pub fn get_ready() {
 
 #[inline(always)]
 fn open_file(filename: &str) -> File {
-    File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {}", filename))
+    File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {filename}"))
 }
 
 lazy_static! {
@@ -45,7 +45,7 @@ fn play_sound(sound: AudioNotification) {
         let file = open_file(file_path);
         let buf_reader = BufReader::new(file);
         let decoder = Decoder::new(buf_reader)
-            .unwrap_or_else(|_| panic!("Failed to decode the sound {:?}", sound));
+            .unwrap_or_else(|_| panic!("Failed to decode the sound {sound:?}"));
         let (_stream, stream_handle) =
             OutputStream::try_default().expect("Failed to open audio output stream");
         stream_handle
