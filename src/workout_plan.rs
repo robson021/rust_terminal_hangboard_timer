@@ -1,5 +1,6 @@
 use crate::{audio_player, sleep_seconds};
 use std::fmt::Display;
+use std::io::Write;
 
 pub struct WorkoutPlan {
     hang_time: u32,
@@ -67,10 +68,11 @@ impl Display for WorkoutPlan {
 fn countdown_hang(time: u32) {
     println!("Hang for {time}s");
     for n in (1..time + 1).rev() {
-        println!("{n}...");
+        print!("{n}...");
+        let _ = std::io::stdout().flush();
         sleep_seconds(1);
     }
-    println!("Stop hanging!");
+    println!("\nStop hanging!");
 }
 
 #[inline(always)]
