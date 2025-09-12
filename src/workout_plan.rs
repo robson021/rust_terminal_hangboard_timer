@@ -65,8 +65,8 @@ impl Display for WorkoutPlan {
 }
 
 #[inline(always)]
-fn countdown_hang(time: u32) {
-    println!("Hang for {time}s");
+fn countdown_hang(time: u32, current_rep: u32, num_of_reps: u32) {
+    println!("Hang for {time}s. Repeat {current_rep} of {num_of_reps}.");
     for n in (1..time + 1).rev() {
         print!("{n}...");
         let _ = std::io::stdout().flush();
@@ -85,14 +85,14 @@ fn hang_round(hang_time: u32, rest_time: u32, number_of_hang_repeats: u32) {
     if hang_time < 1 {
         return;
     }
-    for _ in 0..number_of_hang_repeats - 1 {
+    for i in 0..number_of_hang_repeats - 1 {
         audio_player::ding();
-        countdown_hang(hang_time);
+        countdown_hang(hang_time, i + 1, number_of_hang_repeats);
         audio_player::bell();
         countdown_rest(rest_time);
     }
     audio_player::ding();
-    countdown_hang(hang_time);
+    countdown_hang(hang_time, number_of_hang_repeats, number_of_hang_repeats);
     audio_player::end_of_round();
 }
 
