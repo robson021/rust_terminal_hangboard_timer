@@ -2,8 +2,10 @@ use crate::{sleep_seconds, sound};
 use lazy_static::lazy_static;
 use rodio::{source::Source, Decoder, OutputStream};
 use sound::AudioNotification;
-use std::fs::File;
-use std::io::BufReader;
+use std::collections::HashMap;
+use std::fs;
+use std::io::Cursor;
+use std::sync::{Arc, OnceLock};
 
 #[inline(always)]
 pub fn bell() {
@@ -30,21 +32,33 @@ pub fn get_ready() {
     play_sound(AudioNotification::GetReady);
 }
 
-#[inline(always)]
-fn open_file(filename: &str) -> File {
-    File::open(filename).unwrap_or_else(|_| panic!("Failed to open the file {filename}"))
-}
-
 lazy_static! {
     static ref AUDIO_THREAD_POOL: threadpool::ThreadPool = threadpool::ThreadPool::new(1);
+    static ref AUDIO_FILES: HashMap<&'static str, OnceLock<Arc<[u8]>>> = [
+        AudioNotification::Bell,
+        AudioNotification::Ding,
+        AudioNotification::Finish,
+        AudioNotification::RoundDone,
+        AudioNotification::GetReady,
+    ]
+    .into_iter()
+    .map(|sound| (sound.to_file_path(), OnceLock::new()))
+    .collect();
 }
 
 fn play_sound(sound: AudioNotification) {
     let file_path = sound.to_file_path();
     AUDIO_THREAD_POOL.execute(move || {
-        let file = open_file(file_path);
-        let buf_reader = BufReader::new(file);
-        let decoder = Decoder::new(buf_reader)
+        let audio_data: Arc<[u8]> = AUDIO_FILES
+            .get(file_path)
+            .expect("Audio file is not registered")
+            .get_or_init(|| {
+                fs::read(file_path)
+                    .unwrap_or_else(|_| panic!("Failed to open the file {file_path}"))
+                    .into()
+            })
+            .clone();
+        let decoder = Decoder::new(Cursor::new(audio_data))
             .unwrap_or_else(|_| panic!("Failed to decode the sound {sound:?}"));
         let (_stream, stream_handle) =
             OutputStream::try_default().expect("Failed to open audio output stream");
