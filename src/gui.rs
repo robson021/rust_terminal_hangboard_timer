@@ -223,23 +223,19 @@ impl HangboardApp {
 }
 
 impl eframe::App for HangboardApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.advance();
+        let ctx = ui.ctx().clone();
         ctx.request_repaint_after(Duration::from_millis(100));
-        set_theme(ctx);
+        set_theme(&ctx);
 
         let mut start_requested = false;
         let mut reset_requested = false;
         let is_running = self.is_running();
 
         egui::CentralPanel::default()
-            .frame(
-                egui::Frame::new()
-                    .fill(BACKGROUND)
-                    .inner_margin(egui::Margin::ZERO)
-                    .stroke(egui::Stroke::NONE),
-            )
-            .show(ctx, |ui| {
+            .frame(egui::Frame::new().fill(BACKGROUND))
+            .show(ui, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(18.0);
                     egui::Frame::new()

@@ -1,11 +1,12 @@
-use crate::{sleep_seconds, sound};
-use lazy_static::lazy_static;
-use rodio::{source::Source, Decoder, OutputStream};
+use crate::sound;
+use rodio::{Decoder, DeviceSinkBuilder, Player};
 use sound::AudioNotification;
-use std::collections::HashMap;
 use std::fs;
 use std::io::Cursor;
 use std::sync::{Arc, OnceLock};
+
+static AUDIO_THREAD_POOL: OnceLock<threadpool::ThreadPool> = OnceLock::new();
+static AUDIO_FILES: [OnceLock<Arc<[u8]>>; 5] = [const { OnceLock::new() }; 5];
 
 #[inline(always)]
 pub fn bell() {
@@ -32,39 +33,31 @@ pub fn get_ready() {
     play_sound(AudioNotification::GetReady);
 }
 
-lazy_static! {
-    static ref AUDIO_THREAD_POOL: threadpool::ThreadPool = threadpool::ThreadPool::new(1);
-    static ref AUDIO_FILES: HashMap<&'static str, OnceLock<Arc<[u8]>>> = [
-        AudioNotification::Bell,
-        AudioNotification::Ding,
-        AudioNotification::Finish,
-        AudioNotification::RoundDone,
-        AudioNotification::GetReady,
-    ]
-    .into_iter()
-    .map(|sound| (sound.to_file_path(), OnceLock::new()))
-    .collect();
-}
-
 fn play_sound(sound: AudioNotification) {
     let file_path = sound.to_file_path();
-    AUDIO_THREAD_POOL.execute(move || {
-        let audio_data: Arc<[u8]> = AUDIO_FILES
-            .get(file_path)
-            .expect("Audio file is not registered")
-            .get_or_init(|| {
-                fs::read(file_path)
-                    .unwrap_or_else(|_| panic!("Failed to open the file {file_path}"))
-                    .into()
-            })
-            .clone();
-        let decoder = Decoder::new(Cursor::new(audio_data))
-            .unwrap_or_else(|_| panic!("Failed to decode the sound {sound:?}"));
-        let (_stream, stream_handle) =
-            OutputStream::try_default().expect("Failed to open audio output stream");
-        stream_handle
-            .play_raw(decoder.convert_samples())
-            .expect("Failed to play the sound");
-        sleep_seconds(2);
-    });
+    let file_index = match sound {
+        AudioNotification::Bell => 0,
+        AudioNotification::Ding => 1,
+        AudioNotification::Finish => 2,
+        AudioNotification::RoundDone => 3,
+        AudioNotification::GetReady => 4,
+    };
+    AUDIO_THREAD_POOL
+        .get_or_init(|| threadpool::ThreadPool::new(1))
+        .execute(move || {
+            let audio_data = AUDIO_FILES[file_index]
+                .get_or_init(|| {
+                    fs::read(file_path)
+                        .unwrap_or_else(|_| panic!("Failed to open the file {file_path}"))
+                        .into()
+                })
+                .clone();
+            let decoder = Decoder::try_from(Cursor::new(audio_data))
+                .unwrap_or_else(|_| panic!("Failed to decode the sound {sound:?}"));
+            let stream =
+                DeviceSinkBuilder::open_default_sink().expect("Failed to open audio output stream");
+            let player = Player::connect_new(stream.mixer());
+            player.append(decoder);
+            player.sleep_until_end();
+        });
 }
