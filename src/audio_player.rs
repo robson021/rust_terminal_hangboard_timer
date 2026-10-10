@@ -54,8 +54,9 @@ fn play_sound(sound: AudioNotification) {
                 .clone();
             let decoder = Decoder::try_from(Cursor::new(audio_data))
                 .unwrap_or_else(|_| panic!("Failed to decode the sound {sound:?}"));
-            let stream =
+            let mut stream =
                 DeviceSinkBuilder::open_default_sink().expect("Failed to open audio output stream");
+            stream.log_on_drop(false);
             let player = Player::connect_new(stream.mixer());
             player.append(decoder);
             player.sleep_until_end();
