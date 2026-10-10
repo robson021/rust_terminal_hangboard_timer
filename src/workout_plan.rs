@@ -64,7 +64,6 @@ impl Display for WorkoutPlan {
     }
 }
 
-#[inline(always)]
 fn countdown_hang(time: u32, current_rep: u32, num_of_reps: u32) {
     println!("Hang for {time}s. Repeat {current_rep} of {num_of_reps}.");
     for n in (1..time + 1).rev() {
@@ -75,7 +74,6 @@ fn countdown_hang(time: u32, current_rep: u32, num_of_reps: u32) {
     println!("\nStop hanging!");
 }
 
-#[inline(always)]
 fn countdown_rest(time: u32) {
     println!("Rest for: {time}s");
     sleep_seconds(time);

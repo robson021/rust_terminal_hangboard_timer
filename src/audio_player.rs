@@ -8,27 +8,22 @@ use std::sync::{Arc, OnceLock};
 static AUDIO_THREAD_POOL: OnceLock<threadpool::ThreadPool> = OnceLock::new();
 static AUDIO_FILES: [OnceLock<Arc<[u8]>>; 5] = [const { OnceLock::new() }; 5];
 
-#[inline(always)]
 pub fn bell() {
     play_sound(AudioNotification::Bell);
 }
 
-#[inline(always)]
 pub fn ding() {
     play_sound(AudioNotification::Ding);
 }
 
-#[inline(always)]
 pub fn end_of_round() {
     play_sound(AudioNotification::RoundDone);
 }
 
-#[inline(always)]
 pub fn finish() {
     play_sound(AudioNotification::Finish);
 }
 
-#[inline(always)]
 pub fn get_ready() {
     play_sound(AudioNotification::GetReady);
 }

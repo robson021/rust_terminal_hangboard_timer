@@ -7,12 +7,10 @@ use crate::workout_plan::WorkoutPlan;
 use std::thread;
 use std::time::Duration;
 
-#[inline(always)]
 fn print_separator() {
     println!("-------------------------------------")
 }
 
-#[inline(always)]
 fn sleep_seconds(seconds: u32) {
     match seconds > 15 {
         true => {
