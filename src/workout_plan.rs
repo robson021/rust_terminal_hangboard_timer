@@ -106,8 +106,46 @@ fn read_input() -> u32 {
     std::io::stdin()
         .read_line(&mut input)
         .expect("Can not read user input.");
-    input
-        .trim()
-        .parse::<u32>()
-        .expect("Invalid input. A number was expected.")
+    parse_input(&input).expect("Invalid input. A number was expected.")
+}
+
+fn parse_input(input: &str) -> Result<u32, std::num::ParseIntError> {
+    input.trim().parse()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_input, WorkoutPlan};
+
+    #[test]
+    fn displays_all_workout_settings() {
+        let plan = WorkoutPlan {
+            hang_time: 7,
+            rest_time: 3,
+            number_of_hang_repeats: 6,
+            rest_time_between_sets: 120,
+            number_of_sets: 3,
+        };
+
+        assert_eq!(
+            plan.to_string(),
+            "Hang: 7\nRest: 3\nNumber of hang repeats: 6\nRest between sets: 120\nNumber of sets: 3"
+        );
+    }
+
+    #[test]
+    fn parses_unsigned_seconds_with_surrounding_whitespace() {
+        assert_eq!(parse_input(" \t42\n"), Ok(42));
+    }
+
+    #[test]
+    fn rejects_non_numeric_and_negative_input() {
+        assert!(parse_input("not a number").is_err());
+        assert!(parse_input("-1").is_err());
+    }
+
+    #[test]
+    fn rejects_values_outside_the_u32_range() {
+        assert!(parse_input("4294967296").is_err());
+    }
 }
