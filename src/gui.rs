@@ -335,47 +335,67 @@ impl HangboardApp {
         ui.add_space(12.0);
 
         let seconds = self.remaining_seconds();
-        ui.label(
-            egui::RichText::new(seconds.to_string())
-                .size(96.0)
-                .strong()
-                .color(egui::Color32::from_rgb(255, 232, 206)),
-        );
-        ui.label(
-            egui::RichText::new("SECONDS")
-                .size(10.0)
-                .strong()
-                .color(MUTED_TEXT),
-        );
-
-        if self.phase_duration > 0 {
-            let progress = (1.0 - seconds as f32 / self.phase_duration as f32).clamp(0.0, 1.0);
-            ui.add_space(12.0);
-            let response = ui.add(
-                egui::ProgressBar::new(progress)
-                    .desired_width(240.0)
-                    .desired_height(24.0)
-                    .fill(ACCENT)
-                    .corner_radius(egui::CornerRadius::same(6)),
-            );
-            let percentage = format!("{}%", (progress * 100.0) as u32);
-            let painter = ui.painter();
-            let label_rect =
-                egui::Rect::from_center_size(response.rect.center(), egui::vec2(42.0, 18.0));
-            painter.rect_filled(
-                label_rect,
-                egui::CornerRadius::same(5),
-                egui::Color32::from_black_alpha(150),
-            );
-            painter.text(
-                label_rect.center(),
-                egui::Align2::CENTER_CENTER,
-                percentage,
-                egui::FontId::proportional(12.0),
-                egui::Color32::WHITE,
-            );
-        }
+        let remaining = self
+            .phase_ends_at
+            .map(|deadline| {
+                deadline
+                    .saturating_duration_since(Instant::now())
+                    .as_secs_f32()
+            })
+            .unwrap_or(0.0);
+        let progress = if self.phase_duration > 0 {
+            (remaining / self.phase_duration as f32).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        show_timer_ring(ui, seconds, progress);
     }
+}
+
+fn show_timer_ring(ui: &mut egui::Ui, seconds: u64, progress: f32) {
+    let size = egui::vec2(200.0, 200.0);
+    let (rect, _) = ui.allocate_exact_size(size, egui::Sense::hover());
+    let center = rect.center();
+    let radius = rect.width().min(rect.height()) * 0.5 - 8.0;
+    let stroke_width = 8.0;
+    let painter = ui.painter();
+
+    painter.circle_stroke(
+        center,
+        radius,
+        egui::Stroke::new(stroke_width, egui::Color32::from_rgb(91, 82, 73)),
+    );
+
+    if progress > 0.0 {
+        let segments = (progress * 96.0).ceil() as usize;
+        let points = (0..=segments)
+            .map(|index| {
+                let fraction = index as f32 / segments as f32;
+                let angle =
+                    -std::f32::consts::FRAC_PI_2 + std::f32::consts::TAU * progress * fraction;
+                center + radius * egui::vec2(angle.cos(), angle.sin())
+            })
+            .collect();
+        painter.add(egui::Shape::line(
+            points,
+            egui::Stroke::new(stroke_width, ACCENT),
+        ));
+    }
+
+    painter.text(
+        center - egui::vec2(0.0, 12.0),
+        egui::Align2::CENTER_CENTER,
+        seconds.to_string(),
+        egui::FontId::proportional(64.0),
+        egui::Color32::from_rgb(255, 232, 206),
+    );
+    painter.text(
+        center + egui::vec2(0.0, 38.0),
+        egui::Align2::CENTER_CENTER,
+        "SECONDS",
+        egui::FontId::proportional(11.0),
+        MUTED_TEXT,
+    );
 }
 
 fn set_theme(ctx: &egui::Context) {
@@ -397,7 +417,7 @@ fn set_theme(ctx: &egui::Context) {
 pub fn run() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([500.0, 480.0])
+            .with_inner_size([500.0, 500.0])
             .with_min_inner_size([320.0, 340.0]),
         ..Default::default()
     };
