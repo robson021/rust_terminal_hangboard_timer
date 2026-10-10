@@ -5,6 +5,9 @@ use std::time::{Duration, Instant};
 const MAX_DURATION_SECONDS: u32 = 3600;
 const MAX_REPEATS: u32 = 20;
 const MAX_SETS: u32 = 20;
+const ACCENT: egui::Color32 = egui::Color32::from_rgb(245, 142, 68);
+const BACKGROUND: egui::Color32 = egui::Color32::from_rgb(62, 59, 56);
+const MUTED_TEXT: egui::Color32 = egui::Color32::from_rgb(190, 173, 158);
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase {
@@ -171,11 +174,18 @@ impl HangboardApp {
     }
 
     fn show_settings(&mut self, ui: &mut egui::Ui) {
+        ui.label(
+            egui::RichText::new("WORKOUT PLAN")
+                .size(11.0)
+                .strong()
+                .color(MUTED_TEXT),
+        );
+        ui.add_space(12.0);
         egui::Grid::new("workout_settings")
             .num_columns(2)
-            .spacing([24.0, 12.0])
+            .spacing([18.0, 13.0])
             .show(ui, |ui| {
-                ui.label("Hang time");
+                ui.label("Hang");
                 ui.add(
                     egui::DragValue::new(&mut self.hang_time)
                         .range(1..=MAX_DURATION_SECONDS)
@@ -183,7 +193,7 @@ impl HangboardApp {
                 );
                 ui.end_row();
 
-                ui.label("Rest between hangs");
+                ui.label("Rest");
                 ui.add(
                     egui::DragValue::new(&mut self.rest_time)
                         .range(1..=MAX_DURATION_SECONDS)
@@ -197,7 +207,7 @@ impl HangboardApp {
                 );
                 ui.end_row();
 
-                ui.label("Rest between sets");
+                ui.label("Set rest");
                 ui.add(
                     egui::DragValue::new(&mut self.rest_time_between_sets)
                         .range(1..=MAX_DURATION_SECONDS)
@@ -216,61 +226,80 @@ impl eframe::App for HangboardApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.advance();
         ctx.request_repaint_after(Duration::from_millis(100));
+        set_theme(ctx);
 
         let mut start_requested = false;
         let mut reset_requested = false;
         let is_running = self.is_running();
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(16.0);
-                ui.heading("Hangboard timer");
-                ui.add_space(24.0);
+        egui::CentralPanel::default()
+            .frame(
+                egui::Frame::new()
+                    .fill(BACKGROUND)
+                    .inner_margin(egui::Margin::ZERO)
+                    .stroke(egui::Stroke::NONE),
+            )
+            .show(ctx, |ui| {
+                ui.vertical_centered(|ui| {
+                    ui.add_space(18.0);
+                    egui::Frame::new()
+                        .stroke(egui::Stroke::new(
+                            1.0_f32,
+                            egui::Color32::from_rgba_unmultiplied(255, 191, 130, 100),
+                        ))
+                        .corner_radius(egui::CornerRadius::same(18))
+                        .inner_margin(egui::Margin::same(14))
+                        .show(ui, |ui| {
+                            ui.set_width(280.0);
+                            ui.vertical_centered(|ui| {
+                                if is_running {
+                                    self.show_running_session(ui);
+                                } else {
+                                    if self.phase == Phase::Complete {
+                                        ui.label(
+                                            egui::RichText::new(self.phase_label())
+                                                .size(22.0)
+                                                .strong(),
+                                        );
+                                        ui.add_space(18.0);
+                                    }
+                                    self.show_settings(ui);
+                                }
 
-                if is_running {
-                    ui.label(self.phase_label());
-                    ui.add_space(4.0);
-                    ui.label(format!(
-                        "Set {} of {}  |  Hang {} of {}",
-                        self.current_set,
-                        self.plan
-                            .as_ref()
-                            .expect("workout plan is set")
-                            .number_of_sets,
-                        self.current_rep,
-                        self.plan
-                            .as_ref()
-                            .expect("workout plan is set")
-                            .number_of_hang_repeats
-                    ));
-                    ui.add_space(8.0);
-                    ui.label(egui::RichText::new(self.remaining_seconds().to_string()).size(96.0));
-                    ui.label("seconds");
-                } else if self.phase == Phase::Complete {
-                    ui.label(egui::RichText::new(self.phase_label()).size(28.0));
-                } else {
-                    ui.label(self.phase_label());
-                }
-
-                ui.add_space(24.0);
-                if !is_running {
-                    self.show_settings(ui);
-                    ui.add_space(24.0);
-                    let button_text = if self.phase == Phase::Complete {
-                        "Start another workout"
-                    } else {
-                        "Start workout"
-                    };
-                    start_requested = ui
-                        .add_sized([220.0, 44.0], egui::Button::new(button_text))
-                        .clicked();
-                } else {
-                    reset_requested = ui
-                        .add_sized([220.0, 40.0], egui::Button::new("Stop workout"))
-                        .clicked();
-                }
+                                ui.add_space(20.0);
+                                if !is_running {
+                                    let button_text = if self.phase == Phase::Complete {
+                                        "Start another workout"
+                                    } else {
+                                        "Start workout"
+                                    };
+                                    start_requested = ui
+                                        .add_sized(
+                                            [240.0, 46.0],
+                                            egui::Button::new(
+                                                egui::RichText::new(button_text)
+                                                    .strong()
+                                                    .color(egui::Color32::from_rgb(38, 28, 22)),
+                                            )
+                                            .fill(ACCENT)
+                                            .corner_radius(egui::CornerRadius::same(12)),
+                                        )
+                                        .clicked();
+                                } else {
+                                    reset_requested = ui
+                                        .add_sized(
+                                            [240.0, 42.0],
+                                            egui::Button::new("Stop workout")
+                                                .fill(egui::Color32::from_rgb(77, 51, 43))
+                                                .stroke(egui::Stroke::new(1.0_f32, ACCENT))
+                                                .corner_radius(egui::CornerRadius::same(12)),
+                                        )
+                                        .clicked();
+                                }
+                            });
+                        });
+                });
             });
-        });
 
         if reset_requested {
             self.reset();
@@ -280,11 +309,100 @@ impl eframe::App for HangboardApp {
     }
 }
 
+impl HangboardApp {
+    fn show_running_session(&self, ui: &mut egui::Ui) {
+        ui.label(
+            egui::RichText::new(self.phase_label())
+                .size(24.0)
+                .strong()
+                .color(ACCENT),
+        );
+        ui.add_space(6.0);
+        ui.label(
+            egui::RichText::new(format!(
+                "SET {} OF {}   ·   HANG {} OF {}",
+                self.current_set,
+                self.plan
+                    .as_ref()
+                    .expect("workout plan is set")
+                    .number_of_sets,
+                self.current_rep,
+                self.plan
+                    .as_ref()
+                    .expect("workout plan is set")
+                    .number_of_hang_repeats
+            ))
+            .size(11.0)
+            .strong()
+            .color(MUTED_TEXT),
+        );
+        ui.add_space(12.0);
+
+        let seconds = self.remaining_seconds();
+        ui.label(
+            egui::RichText::new(seconds.to_string())
+                .size(96.0)
+                .strong()
+                .color(egui::Color32::from_rgb(255, 232, 206)),
+        );
+        ui.label(
+            egui::RichText::new("SECONDS")
+                .size(10.0)
+                .strong()
+                .color(MUTED_TEXT),
+        );
+
+        if self.phase_duration > 0 {
+            let progress = (1.0 - seconds as f32 / self.phase_duration as f32).clamp(0.0, 1.0);
+            ui.add_space(12.0);
+            let response = ui.add(
+                egui::ProgressBar::new(progress)
+                    .desired_width(240.0)
+                    .desired_height(24.0)
+                    .fill(ACCENT)
+                    .corner_radius(egui::CornerRadius::same(6)),
+            );
+            let percentage = format!("{}%", (progress * 100.0) as u32);
+            let painter = ui.painter();
+            let label_rect =
+                egui::Rect::from_center_size(response.rect.center(), egui::vec2(42.0, 18.0));
+            painter.rect_filled(
+                label_rect,
+                egui::CornerRadius::same(5),
+                egui::Color32::from_black_alpha(150),
+            );
+            painter.text(
+                label_rect.center(),
+                egui::Align2::CENTER_CENTER,
+                percentage,
+                egui::FontId::proportional(12.0),
+                egui::Color32::WHITE,
+            );
+        }
+    }
+}
+
+fn set_theme(ctx: &egui::Context) {
+    ctx.set_pixels_per_point(16.0 / 12.5);
+    let mut visuals = egui::Visuals::dark();
+    visuals.override_text_color = Some(egui::Color32::from_rgb(248, 238, 226));
+    visuals.window_fill = BACKGROUND;
+    visuals.panel_fill = BACKGROUND;
+    visuals.selection.bg_fill = ACCENT;
+    visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(74, 58, 48);
+    visuals.widgets.inactive.fg_stroke.color = egui::Color32::from_rgb(248, 238, 226);
+    visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(108, 72, 50);
+    visuals.widgets.hovered.fg_stroke.color = egui::Color32::WHITE;
+    visuals.widgets.active.bg_fill = ACCENT;
+    visuals.widgets.active.fg_stroke.color = egui::Color32::WHITE;
+    ctx.set_visuals(visuals);
+}
+
 pub fn run() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([480.0, 600.0])
-            .with_min_inner_size([380.0, 520.0]),
+            .with_inner_size([500.0, 480.0])
+            .with_min_inner_size([320.0, 340.0]),
         ..Default::default()
     };
     eframe::run_native(
