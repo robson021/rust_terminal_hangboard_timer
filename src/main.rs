@@ -1,4 +1,5 @@
 mod audio_player;
+mod gui;
 mod sound;
 mod workout_plan;
 
@@ -26,13 +27,18 @@ fn sleep_seconds(seconds: u32) {
     };
 }
 
-fn main() {
-    let workout_plan = WorkoutPlan::from_stdin();
+fn main() -> eframe::Result {
+    if std::env::args().any(|argument| argument == "--cli") {
+        let workout_plan = WorkoutPlan::from_stdin();
 
-    print_separator();
-    println!("Workout plan:");
-    println!("{workout_plan}");
-    print_separator();
+        print_separator();
+        println!("Workout plan:");
+        println!("{workout_plan}");
+        print_separator();
 
-    workout_plan.start_session();
+        workout_plan.start_session();
+        Ok(())
+    } else {
+        gui::run()
+    }
 }

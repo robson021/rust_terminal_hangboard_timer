@@ -3,11 +3,11 @@ use std::fmt::Display;
 use std::io::Write;
 
 pub struct WorkoutPlan {
-    hang_time: u32,
-    rest_time: u32,
-    number_of_hang_repeats: u32,
-    rest_time_between_sets: u32,
-    number_of_sets: u32,
+    pub hang_time: u32,
+    pub rest_time: u32,
+    pub number_of_hang_repeats: u32,
+    pub rest_time_between_sets: u32,
+    pub number_of_sets: u32,
 }
 
 impl WorkoutPlan {
